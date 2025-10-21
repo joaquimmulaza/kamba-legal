@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
 import {
   Card,
   CardContent,
@@ -14,13 +16,44 @@ const ChatPage = () => {
     { role: 'assistant', content: 'Olá! Como posso ajudar sobre o Bilhete de Identidade?' }
   ]);
 
+  const { mutate: sendMessage, isPending } = useMutation({
+    mutationFn: async (content: string) => {
+      // A chamada à API real acontecerá aqui.
+      // Por agora, vamos simular uma resposta do backend.
+      const response = await axios.post('https://api.kambalegal.com/chat', { prompt: content });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // Quando a API responder com sucesso, adicionamos a resposta da IA.
+      const assistantMessage: Message = { role: 'assistant', content: data.response };
+
+      // Substitui a mensagem "a pensar..." pela resposta real.
+      setMessages(currentMessages => {
+        const newMessages = [...currentMessages];
+        newMessages[newMessages.length - 1] = assistantMessage;
+        return newMessages;
+      });
+    },
+    onError: (error) => {
+      // Em caso de erro, informa o utilizador.
+      console.error("Erro ao contactar a API:", error);
+      const errorMessage: Message = { role: 'assistant', content: 'Desculpe, ocorreu um erro. Tente novamente mais tarde.' };
+      setMessages(currentMessages => {
+        const newMessages = [...currentMessages];
+        newMessages[newMessages.length - 1] = errorMessage;
+        return newMessages;
+      });
+    }
+  });
+
   const handleSendMessage = (content: string) => {
-    // Adiciona a mensagem do utilizador
     const userMessage: Message = { role: 'user', content };
-    
-    // Placeholder para a resposta da IA
-    const assistantMessage: Message = { role: 'assistant', content: 'Estou a processar a sua pergunta...' };
-    setMessages(currentMessages => [...currentMessages, userMessage, assistantMessage]);
+    const thinkingMessage: Message = { role: 'assistant', content: 'A pensar...' };
+
+    // Adiciona a mensagem do user e a mensagem de "a pensar..."
+    setMessages(currentMessages => [...currentMessages, userMessage, thinkingMessage]);
+    // Chama a mutação para enviar a mensagem para o backend
+    sendMessage(content);
   };
 
   return (
@@ -33,7 +66,7 @@ const ChatPage = () => {
           <ChatMessages messages={messages} />
         </CardContent>
         <CardFooter>
-          <ChatInput onSendMessage={handleSendMessage} />
+          <ChatInput onSendMessage={handleSendMessage} isLoading={isPending} />
         </CardFooter>
       </Card>
     </div>
