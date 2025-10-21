@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -5,21 +6,34 @@ import {
   CardHeader,
   CardTitle,
 } from '../components/ui/card';
-import { ChatMessages } from '../components/ChatMessages';
+import { ChatMessages, type Message } from '../components/ChatMessages';
 import { ChatInput } from '../components/ChatInput';
 
 const ChatPage = () => {
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'assistant', content: 'Olá! Como posso ajudar sobre o Bilhete de Identidade?' }
+  ]);
+
+  const handleSendMessage = (content: string) => {
+    // Adiciona a mensagem do utilizador
+    const userMessage: Message = { role: 'user', content };
+    
+    // Placeholder para a resposta da IA
+    const assistantMessage: Message = { role: 'assistant', content: 'Estou a processar a sua pergunta...' };
+    setMessages(currentMessages => [...currentMessages, userMessage, assistantMessage]);
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-2xl flex flex-col h-[80vh]">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
+      <Card className="w-[440px] h-[700px] grid grid-rows-[auto,1fr,auto]">
         <CardHeader>
-          <CardTitle>Kamba Legal Chat</CardTitle>
+          <CardTitle>Kamba Legal AI</CardTitle>
         </CardHeader>
-        <CardContent className="flex-1 overflow-y-auto">
-          <ChatMessages />
+        <CardContent className="overflow-y-auto">
+          <ChatMessages messages={messages} />
         </CardContent>
         <CardFooter>
-          <ChatInput />
+          <ChatInput onSendMessage={handleSendMessage} />
         </CardFooter>
       </Card>
     </div>
