@@ -15,7 +15,7 @@ if not api_key:
     raise ValueError("A variável de ambiente GEMINI_API_KEY não foi definida.")
 
 genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 # --- Modelos Pydantic ---
 class ChatRequest(BaseModel):
@@ -33,7 +33,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"], # Mais seguro para desenvolvimento
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
