@@ -1,15 +1,27 @@
+import os
 import asyncio
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from dotenv import load_dotenv
+import google.generativeai as genai
 
-# --- Modelos Pydantic (Definem a estrutura dos dados da API) ---
+# Carrega as variáveis de ambiente do ficheiro .env
+load_dotenv()
+
+# --- Configuração da API do Gemini ---
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise ValueError("A variável de ambiente GEMINI_API_KEY não foi definida.")
+
+genai.configure(api_key=api_key)
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+# --- Modelos Pydantic ---
 class ChatRequest(BaseModel):
-    """Define o formato esperado para a requisição do chat."""
     prompt: str
 
 class ChatResponse(BaseModel):
-    """Define o formato da resposta do chat."""
     response: str
 
 # --- Aplicação FastAPI ---
@@ -21,24 +33,33 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Em produção, deves restringir isto ao teu domínio do frontend
+    allow_origins=["http://localhost:5173"], # Mais seguro para desenvolvimento
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 @app.get("/")
 def read_root():
-    """Endpoint de boas-vindas para verificar se a API está a funcionar."""
     return {"status": "ok", "message": "Bem-vindo à API do Kamba Legal!"}
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
-    """Recebe um prompt do utilizador e retorna uma resposta da IA."""
+    """Recebe um prompt do utilizador, envia para a Gemini API e retorna a resposta."""
+    try:
+        # No futuro, aqui iremos adicionar o contexto dos teus documentos (RAG)
+        full_prompt = f"""
+        Você é um assistente especializado em processos burocráticos de Angola.
+        Responda à seguinte pergunta de forma clara, concisa e passo a passo,
+        como se estivesse a ajudar um cidadão comum.
 
-    # Simula um atraso de processamento da IA (2 segundos)
-    await asyncio.sleep(2)
-    # Lógica simulada: apenas ecoa a pergunta com um prefixo.
-    # No futuro, aqui será a chamada para a API do Gemini.
-    simulated_response = f"Recebi a sua pergunta sobre: '{request.prompt}'. Em breve terei a resposta completa."
-    return ChatResponse(response=simulated_response)
+        Pergunta: {request.prompt}
+        """
+        # Chama a API da Gemini
+        gemini_response = await model.generate_content_async(full_prompt)
+        # Extrai e limpa o texto da resposta
+        response_text = gemini_response.text.strip()
+        return ChatResponse(response=response_text)
+    except Exception as e:
+        print(f"Ocorreu um erro ao chamar a API do Gemini: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar a sua pergunta.")
