@@ -20,7 +20,7 @@ const ChatPage = () => {
     mutationFn: async (content: string) => {
       // A chamada à API real acontecerá aqui.
       // Por agora, vamos simular uma resposta do backend.
-      const response = await axios.post('https://api.kambalegal.com/chat', { prompt: content });
+      const response = await axios.post('http://127.0.0.1:8000/chat', { prompt: content });
       return response.data;
     },
     onSuccess: (data) => {
