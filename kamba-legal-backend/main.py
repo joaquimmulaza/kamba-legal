@@ -10,9 +10,9 @@ import google.generativeai as genai
 load_dotenv()
 
 # --- Configuração da API do Gemini ---
-api_key = os.getenv("GEMINI_API_KEY")
+api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
-    raise ValueError("A variável de ambiente GEMINI_API_KEY não foi definida.")
+    raise ValueError("A variável de ambiente GOOGLE_API_KEY não foi definida.")
 
 genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')

@@ -21,4 +21,4 @@ EXPOSE $PORT
 
 # Comando para correr a aplicação quando o container iniciar
 # Usa a variável de ambiente $PORT para definir a porta do Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "$PORT"]
+CMD uvicorn main:app --host 0.0.0.0 --port $PORT
